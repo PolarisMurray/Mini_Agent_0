@@ -3,17 +3,18 @@ import json
 import glob as g
 import subprocess
 
+
 from pathlib import Path
 from openai import OpenAI
 from dotenv import load_dotenv
-
+from dataclasses import dataclass, field
+from typing import Callable, List, Dict, Any
 
 # =========================================================
 # Part 1, Configure the OpenAI client
 # =========================================================
 
 load_dotenv()  # Load environment variables from .env file
-
 API_KEY = os.getenv("DEEPSEEK_API_KEY")
 MODEL_ID = os.getenv("MODEL_ID")
 
@@ -80,7 +81,7 @@ When the task is finished, respond normally without calling a tool.
 # Part 4, Define the tools
 # =========================================================
 
-TOOLS = [
+TOOLS_SCHEMAS = [
     {
         "type": "function",
         "function": {
@@ -221,7 +222,8 @@ TOOLS = [
         }
     }
 ]
-
+# ----
+# trying to make the tool better and resuable
 
 # =========================================================
 # Part 5, Implement the tools
@@ -328,11 +330,52 @@ def run_glob(pattern):
 
     return "\n".join(shown)
 
+#----
+# Tool registry
 
+@dataclass
+class Tool:
+    name: str
+    description: str
+    function: Callable[..., Any]
+
+    def execute(self, arguments: dict[str, Any]) -> Any:
+        return self.function(**arguments)
+
+TOOL_REGISTRY: dict[str, Tool] = {}
+
+TOOL_REGISTRY["bash"] = Tool(
+    name="bash",
+    description="Run a bash command.",
+    function=run_bash,
+)
+
+TOOL_REGISTRY["read_file"] = Tool(
+    name="read_file",
+    description="Read the contents of a text file.",
+    function=run_read,
+)
+
+TOOL_REGISTRY["write_file"] = Tool(
+    name="write_file",
+    description="Write content to a text file.",
+    function=run_write,
+)
+
+TOOL_REGISTRY["edit_file"] = Tool(
+    name="edit_file",
+    description="Replace text in a file.",
+    function=run_edit,
+)
+
+TOOL_REGISTRY["glob"] = Tool(
+    name="glob",
+    description="Find files matching a glob pattern.",
+    function=run_glob,
+)
 # =========================================================
 # Part 6, Agent Loop
 # =========================================================
-
 def agent_loop(messages):
 
     while True:
@@ -346,7 +389,7 @@ def agent_loop(messages):
                 },
                 *messages,
             ],
-            tools=TOOLS,
+            tools=TOOLS_SCHEMAS,
             tool_choice="auto",
         )
 
@@ -374,40 +417,8 @@ def agent_loop(messages):
             print(f"Arguments: {arguments}")
 
             try:
-
-                if tool_name == "bash":
-                    output = run_bash(
-                        arguments["command"]
-                    )
-
-                elif tool_name == "read_file":
-                    output = run_read(
-                        arguments["path"],
-                        arguments.get("limit")
-                    )
-
-                elif tool_name == "write_file":
-                    output = run_write(
-                        arguments["path"],
-                        arguments["content"]
-                    )
-
-                elif tool_name == "edit_file":
-                    output = run_edit(
-                        arguments["path"],
-                        arguments["old_text"],
-                        arguments["new_text"]
-                    )
-
-                elif tool_name == "glob":
-                    output = run_glob(
-                        arguments["pattern"]
-                    )
-
-                else:
-                    output = (
-                        f"Error: unknown tool '{tool_name}'"
-                    )
+                tool = TOOL_REGISTRY[tool_name]
+                output = tool.execute(arguments)
 
             except Exception as e:
                 output = (
