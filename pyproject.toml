@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mini-agent"
+version = "0.1.0"
+description = "A minimal coding agent with tool calling."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "openai",
+    "python-dotenv",
+]
+
+[project.scripts]
+mini-agent = "mini_agent.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
