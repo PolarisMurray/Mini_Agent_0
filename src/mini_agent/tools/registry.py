@@ -24,6 +24,7 @@ TOOL_REGISTRY["read_file"] = Tool(
     name="read_file",
     description="Read the contents of a text file.",
     function=run_read,
+    read_only=True,
 )
 
 TOOL_REGISTRY["write_file"] = Tool(
@@ -42,10 +43,12 @@ TOOL_REGISTRY["glob"] = Tool(
     name="glob",
     description="Find files matching a glob pattern.",
     function=run_glob,
+    read_only=True,
 )
 
 TOOL_REGISTRY["load_skill"] = Tool(
     name="load_skill",
     description="Load a skill's SKILL.md or one of its extra files.",
     function=load_skill,
+    read_only=True,
 )
