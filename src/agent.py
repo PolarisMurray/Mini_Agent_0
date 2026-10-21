@@ -6,9 +6,7 @@ from openai.types.chat import ChatCompletionMessage
 
 MAX_TURNS = 50  # safety limit, so a confused model cannot loop forever
 
-# =========================================================
 # Agent Loop
-# =========================================================
 
 
 def preview(text, width=100):

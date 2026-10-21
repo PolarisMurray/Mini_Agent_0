@@ -198,7 +198,7 @@ def make_plan(messages, system):
 
         # The model answered in text, usually a question for the user.
         reply = input(
-            "\n回复它（直接回车 = 让它直接给出计划）\n> "
+            "\nreply(enter = let him give the plan\n> "
         ).strip()
 
         messages.append(
