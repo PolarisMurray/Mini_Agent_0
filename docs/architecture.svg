@@ -1,0 +1,202 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 720" width="1060" height="720" role="img" aria-labelledby="title desc">
+  <title id="title">Mini Agent architecture</title>
+  <desc id="desc">The session in main.py builds the system prompt from skills and memory, then sends each query either to the agent loop or to plan mode. The agent loop calls the LLM, checks permissions, dispatches tool calls through the tool registry, and appends results until the model answers. Plan mode cycles through plan, review and execute.</desc>
+
+  <style>
+    svg {
+      --bg: #f6f5f1; --panel: #ffffff; --pstroke: #e2dfd6; --card: #fbfaf7;
+      --line: #b9b3a6; --text: #1f1d1a; --muted: #77726a;
+      --accent: #2f6fde; --warn: #c27a12;
+    }
+    @media (prefers-color-scheme: dark) {
+      svg {
+        --bg: #15171b; --panel: #1d2025; --pstroke: #2f333a; --card: #23272d;
+        --line: #59606a; --text: #e8e6e1; --muted: #9a968d;
+        --accent: #6ea2ff; --warn: #e0a43a;
+      }
+    }
+    .bg { fill: var(--bg); }
+    .panel { fill: var(--panel); stroke: var(--pstroke); stroke-width: 1; }
+    .node { fill: var(--card); stroke: var(--line); stroke-width: 1.4; }
+    .planned { stroke: var(--warn); stroke-dasharray: 6 4; stroke-width: 1.6; }
+    .skel { stroke: var(--muted); stroke-dasharray: 2 4; stroke-width: 1.6; }
+    .edge { fill: none; stroke: var(--line); stroke-width: 1.5; }
+    .flow { stroke: var(--accent); stroke-dasharray: 6 6; animation: dash 0.9s linear infinite; }
+    @keyframes dash { to { stroke-dashoffset: -12; } }
+    .ah { fill: var(--line); }
+    .aha { fill: var(--accent); }
+    .dot { fill: var(--accent); }
+    .title { fill: var(--text); font: 700 20px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .t { fill: var(--text); font: 600 14px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .mono { fill: var(--text); font: 600 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .sub { fill: var(--muted); font: 400 10.5px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .lbl { fill: var(--muted); font: 600 10.5px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .plabel { fill: var(--muted); font: 700 11px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; letter-spacing: 0.08em; }
+    .pulse { fill: none; stroke: var(--accent); stroke-width: 2.5; opacity: 0; animation: pulse 6s infinite; }
+    .p2 { animation-delay: 2s; }
+    .p3 { animation-delay: 4s; }
+    @keyframes pulse { 0% { opacity: 0; } 4% { opacity: 1; } 30% { opacity: 1; } 34% { opacity: 0; } 100% { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { .flow, .pulse { animation: none; } }
+  </style>
+
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" class="ah"/>
+    </marker>
+    <marker id="aha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" class="aha"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1060" height="720" rx="16"/>
+
+  <!-- Header + legend -->
+  <text class="title" x="30" y="44">Mini Agent</text>
+  <rect class="node" x="560" y="30" width="24" height="16" rx="4"/>
+  <text class="sub" x="592" y="42">working</text>
+  <rect class="node planned" x="670" y="30" width="24" height="16" rx="4"/>
+  <text class="sub" x="702" y="42">written, not wired in</text>
+  <rect class="node skel" x="860" y="30" width="24" height="16" rx="4"/>
+  <text class="sub" x="892" y="42">skeleton</text>
+
+  <!-- Panels -->
+  <rect class="panel" x="30" y="70" width="230" height="420" rx="12"/>
+  <text class="plabel" x="46" y="94">SESSION · main.py</text>
+  <rect class="panel" x="300" y="70" width="420" height="420" rx="12"/>
+  <text class="plabel" x="316" y="94">AGENT LOOP · agent.py</text>
+  <rect class="panel" x="760" y="70" width="270" height="420" rx="12"/>
+  <text class="plabel" x="776" y="94">TOOLS · tools/</text>
+  <rect class="panel" x="300" y="520" width="730" height="180" rx="12"/>
+  <text class="plabel" x="316" y="544">PLAN MODE · plan.py</text>
+  <text class="sub" x="1014" y="544" text-anchor="end">each phase runs agent_loop with its own tools + stop tool</text>
+
+  <!-- Session edges -->
+  <path class="edge" d="M95,156 L95,212" marker-end="url(#ah)"/>
+  <path class="edge" d="M195,156 L195,212" marker-end="url(#ah)"/>
+  <path class="edge" d="M145,258 L145,290" marker-end="url(#ah)"/>
+  <path class="edge" d="M145,336 L145,368" marker-end="url(#ah)"/>
+  <path class="edge" d="M145,414 L145,438" marker-end="url(#ah)"/>
+  <text class="lbl" x="153" y="431">empty → quit</text>
+  <path class="edge" d="M50,458 L42,458 L42,132 L48,132" marker-end="url(#ah)"/>
+  <text class="sub" x="38" y="300" text-anchor="middle" transform="rotate(-90 38 300)">distill new facts</text>
+
+  <!-- Router → agent loop / plan mode -->
+  <path class="edge flow" d="M240,384 L343,384" marker-end="url(#aha)"/>
+  <text class="lbl" x="268" y="377">chat</text>
+  <path class="edge" d="M240,404 L270,404 L270,620 L338,620" marker-end="url(#ah)"/>
+  <text class="lbl" x="276" y="512">/plan</text>
+
+  <!-- Agent loop edges -->
+  <path class="edge flow" d="M480,154 L480,186" marker-end="url(#aha)"/>
+  <path class="edge flow" d="M480,234 L480,266" marker-end="url(#aha)"/>
+  <path class="edge flow" d="M480,314 L480,346" marker-end="url(#aha)"/>
+  <text class="lbl" x="488" y="334">yes</text>
+  <path class="edge flow" d="M480,394 L480,426" marker-end="url(#aha)"/>
+  <path class="edge flow" d="M380,451 L345,451 L345,131 L378,131" marker-end="url(#aha)"/>
+  <text class="sub" x="338" y="291" text-anchor="middle" transform="rotate(-90 338 291)">tool results → messages</text>
+  <path class="edge" d="M580,291 L610,291" marker-end="url(#ah)"/>
+  <text class="lbl" x="595" y="284" text-anchor="middle">no</text>
+  <path class="edge flow" d="M580,451 L758,451" marker-end="url(#aha)"/>
+
+  <!-- One turn of the loop, drawn under the nodes so it shows between them -->
+  <circle class="dot" r="6">
+    <animateMotion dur="6s" repeatCount="indefinite" path="M480,131 L480,451 L345,451 L345,131 Z"/>
+  </circle>
+
+  <!-- Session nodes -->
+  <rect class="node" x="50" y="110" width="90" height="46" rx="8"/>
+  <text class="mono" x="95" y="130" text-anchor="middle">memory.md</text>
+  <text class="sub" x="95" y="146" text-anchor="middle">long-term</text>
+  <rect class="node" x="150" y="110" width="90" height="46" rx="8"/>
+  <text class="mono" x="195" y="130" text-anchor="middle">skills/</text>
+  <text class="sub" x="195" y="146" text-anchor="middle">L1 index</text>
+
+  <rect class="node" x="50" y="214" width="190" height="44" rx="8"/>
+  <text class="mono" x="145" y="233" text-anchor="middle">build_system_prompt()</text>
+  <text class="sub" x="145" y="249" text-anchor="middle">base + skills + memory</text>
+
+  <rect class="node" x="50" y="292" width="190" height="44" rx="8"/>
+  <text class="t" x="145" y="311" text-anchor="middle">input() loop</text>
+  <text class="sub" x="145" y="327" text-anchor="middle">one query per turn</text>
+
+  <rect class="node" x="50" y="370" width="190" height="44" rx="8"/>
+  <text class="t" x="145" y="389" text-anchor="middle">route the query</text>
+  <text class="sub" x="145" y="405" text-anchor="middle">chat or /plan &lt;task&gt;</text>
+
+  <rect class="node" x="50" y="440" width="190" height="36" rx="8"/>
+  <text class="mono" x="145" y="463" text-anchor="middle">save_memory()</text>
+
+  <!-- Agent loop nodes -->
+  <rect class="node planned" x="380" y="108" width="200" height="46" rx="8"/>
+  <text class="mono" x="480" y="128" text-anchor="middle">compact()</text>
+  <text class="sub" x="480" y="144" text-anchor="middle">sliding window + summary</text>
+
+  <rect class="node" x="380" y="188" width="200" height="46" rx="8"/>
+  <text class="t" x="480" y="208" text-anchor="middle">LLM call</text>
+  <text class="sub" x="480" y="224" text-anchor="middle">DeepSeek via OpenAI SDK</text>
+
+  <rect class="node" x="380" y="268" width="200" height="46" rx="8"/>
+  <text class="mono" x="480" y="288" text-anchor="middle">tool_calls?</text>
+  <text class="sub" x="480" y="304" text-anchor="middle">none → final answer</text>
+
+  <rect class="node planned" x="380" y="348" width="200" height="46" rx="8"/>
+  <text class="mono" x="480" y="368" text-anchor="middle">check_permissions()</text>
+  <text class="sub" x="480" y="384" text-anchor="middle">deny list · rules · ask user</text>
+
+  <rect class="node" x="380" y="428" width="200" height="46" rx="8"/>
+  <text class="mono" x="480" y="448" text-anchor="middle">TOOL_REGISTRY[name]</text>
+  <text class="sub" x="480" y="464" text-anchor="middle">.execute(arguments)</text>
+
+  <rect class="node" x="612" y="273" width="92" height="36" rx="18"/>
+  <text class="t" x="658" y="296" text-anchor="middle">answer</text>
+
+  <!-- Tools -->
+  <rect class="node" x="780" y="108" width="230" height="38" rx="8"/>
+  <text class="mono" x="796" y="132">bash</text>
+  <text class="sub" x="996" y="131" text-anchor="end">shell</text>
+  <path class="edge" d="M792,146 L792,167 L798,167" marker-end="url(#ah)"/>
+  <rect class="node skel" x="800" y="152" width="210" height="30" rx="8"/>
+  <text class="mono" x="816" y="172" style="font-size:12px">sandbox.py</text>
+  <text class="sub" x="996" y="171" text-anchor="end">limits, isolation</text>
+
+  <rect class="node" x="780" y="196" width="230" height="38" rx="8"/>
+  <text class="mono" x="796" y="220">read_file</text>
+  <text class="sub" x="996" y="219" text-anchor="end">read-only</text>
+  <rect class="node" x="780" y="244" width="230" height="38" rx="8"/>
+  <text class="mono" x="796" y="268">write_file</text>
+  <text class="sub" x="996" y="267" text-anchor="end">writes</text>
+  <rect class="node" x="780" y="292" width="230" height="38" rx="8"/>
+  <text class="mono" x="796" y="316">edit_file</text>
+  <text class="sub" x="996" y="315" text-anchor="end">writes</text>
+  <rect class="node" x="780" y="340" width="230" height="38" rx="8"/>
+  <text class="mono" x="796" y="364">glob</text>
+  <text class="sub" x="996" y="363" text-anchor="end">read-only</text>
+  <rect class="node" x="780" y="388" width="230" height="38" rx="8"/>
+  <text class="mono" x="796" y="412">load_skill</text>
+  <text class="sub" x="996" y="411" text-anchor="end">reads skills/</text>
+  <text class="sub" x="780" y="452">file tools use safe_path()</text>
+  <text class="sub" x="780" y="467">→ paths stay inside WORKDIR</text>
+
+  <!-- Plan mode -->
+  <path class="edge" d="M520,620 L588,620" marker-end="url(#ah)"/>
+  <path class="edge" d="M770,620 L838,620" marker-end="url(#ah)"/>
+  <path class="edge" d="M680,592 C680,560 430,560 430,590" marker-end="url(#ah)"/>
+  <text class="lbl" x="555" y="561" text-anchor="middle">feedback → revise</text>
+  <path class="edge" d="M925,648 C925,690 430,690 430,650" marker-end="url(#ah)"/>
+  <text class="lbl" x="680" y="672" text-anchor="middle">request_replan (max 3)</text>
+
+  <rect class="node" x="340" y="592" width="180" height="56" rx="8"/>
+  <rect class="pulse" x="340" y="592" width="180" height="56" rx="8"/>
+  <text class="t" x="430" y="615" text-anchor="middle">PLAN</text>
+  <text class="sub" x="430" y="633" text-anchor="middle">read-only → submit_plan</text>
+
+  <rect class="node" x="590" y="592" width="180" height="56" rx="8"/>
+  <rect class="pulse p2" x="590" y="592" width="180" height="56" rx="8"/>
+  <text class="t" x="680" y="615" text-anchor="middle">REVIEW</text>
+  <text class="sub" x="680" y="633" text-anchor="middle">y run · n abort · or feedback</text>
+
+  <rect class="node" x="840" y="592" width="170" height="56" rx="8"/>
+  <rect class="pulse p3" x="840" y="592" width="170" height="56" rx="8"/>
+  <text class="t" x="925" y="615" text-anchor="middle">EXECUTE</text>
+  <text class="sub" x="925" y="633" text-anchor="middle">all tools + update_step</text>
+</svg>
